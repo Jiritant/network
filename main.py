@@ -34,14 +34,19 @@ class Neuron(Agent):
     def step(self):
         self.choose()
         self.act()
-
     
+
 class NetworkModel(Model):
-    def __init__(self, N, beta):
+    def __init__(self, N, beta, seed = None):
+        super().__init__()
         self.num_agents = N
         self.beta = beta
         self.schedule = SimultaneousActivation(self)
         self.weight_matrix = np.zeros((N, N))
+
+        if seed is not None:
+            random.seed(seed)
+            self.random.seed(seed)
 
         for i in range(self.num_agents):
             agent = Neuron(i, self)
@@ -57,14 +62,14 @@ class NetworkModel(Model):
     def update_weight(self, agent_i, agent_j):
         if agent_i.behavior == 'send':
             if agent_j.behavior == 'receive':
-                self.weight_matrix[agent_i.unique_id, agent_j.unique_id] += 1
-                self.weight_matrix[agent_j.unique_id, agent_i.unique_id] += 1
+                self.weight_matrix[agent_i.unique_id, agent_j.unique_id] += 0.1
+                self.weight_matrix[agent_j.unique_id, agent_i.unique_id] += 0.1
             elif agent_j.behavior == 'integrate':
-                self.weight_matrix[agent_i.unique_id, agent_j.unique_id] += 1
-                self.weight_matrix[agent_j.unique_id, agent_i.unique_id] += 1                
+                self.weight_matrix[agent_i.unique_id, agent_j.unique_id] += 0.1
+                self.weight_matrix[agent_j.unique_id, agent_i.unique_id] += 0.1                
             elif agent_j.behavior == 'send':
-                self.weight_matrix[agent_i.unique_id, agent_j.unique_id] -= 1
-                self.weight_matrix[agent_j.unique_id, agent_i.unique_id] -= 1
+                self.weight_matrix[agent_i.unique_id, agent_j.unique_id] -= 0.1
+                self.weight_matrix[agent_j.unique_id, agent_i.unique_id] -= 0.1
 
 
     def step(self):
@@ -91,3 +96,8 @@ class NetworkModel(Model):
         nx.draw_networkx_edges(G, pos, edgelist = edges, width = [weight for weight in weights])
 
         plt.show()
+
+
+        print(f'This is the average degree connectivity {nx.average_degree_connectivity(G)}')
+
+        print(f'This is the average clustering {nx.average_clustering(G)}')
